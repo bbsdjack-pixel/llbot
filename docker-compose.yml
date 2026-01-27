@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+  # 核心服务：NTQQ 协议端
+  pmhq:
+    image: linyuchen/pmhq:latest
+    container_name: pmhq
+    privileged: true
+    environment:
+      - ENABLE_HEADLESS=true  # 云端部署必须开启无头模式
+    volumes:
+      - qq_data:/root/.config/QQ
+    restart: always
+    networks:
+      - bot_network
+
+  # 机器人主程序
+  llbot:
+    image: linyuchen/llbot:latest
+    container_name: llbot
+    ports:
+      - "3080:3080"  # WebUI 端口
+    environment:
+      - PMHQ_HOST=pmhq
+      - WEBUI_PORT=3080
+    volumes:
+      - qq_data:/root/.config/QQ
+      - config_data:/app/llbot/data
+    depends_on:
+      - pmhq
+    restart: always
+    networks:
+      - bot_network
+
+volumes:
+  qq_data:    # 持久化 QQ 登录信息
+  config_data: # 持久化机器人配置
+
+networks:
+  bot_network:
+    driver: bridge
